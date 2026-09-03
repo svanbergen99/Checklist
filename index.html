@@ -356,8 +356,8 @@
         <div class="checks">
           <label class="checkline"><input type="checkbox" id="check_3_0"><span>Voorlezen: “We berekenen jouw premie en beoordelen je aanvraag automatisch.” (Automatische besluitvorming)</span></label>
           <label class="checkline"><input type="checkbox" id="check_3_1"><span>Benoem de exacte premie: totale premie</span></label>
-          <label class="checkline"><input type="checkbox" id="check_3_1a"><span>Heb je de auto zakelijk gekocht of gefinancierd? Of gebruik je de auto zakelijk?</span></label>
-          <label class="checkline"><input type="checkbox" id="check_3_1b"><span><strong>Op welke naam staat het kenteken van de auto?</strong></span></label>
+          <label class="checkline"><input type="checkbox" id="check_3_1a"><span>Heb je het voertuig zakelijk gekocht of gefinancierd? Of gebruik je het voertuig zakelijk?</span></label>
+          <label class="checkline"><input type="checkbox" id="check_3_1b"><span><strong>Op welke naam staat het kenteken van het voertuig?</strong></span></label>
           <label class="checkline"><input type="checkbox" id="check_3_2"><span>Bij post benoemen dat de voorwaarden digitaal verstuurd worden. Dit gaat niet via de post.</span></label>
           <label class="checkline"><input type="checkbox" id="check_3_3"><span>Vragen: “Geeft u Centraal Beheer toestemming om het bedrag van uw rekening af te schrijven?”</span></label>
         </div>
@@ -446,9 +446,82 @@
     const strictWordProgress = {};
     const strictPreviewProgress = {};
 
+    const vehicleObjects = [
+      { key: "bestelauto", label: "bestelauto", article: "de", aliases: ["bestelauto", "bestelwagen"] },
+      { key: "motor", label: "motor", article: "de", aliases: ["motorfiets", "motor"] },
+      { key: "brommer", label: "brommer", article: "de", aliases: ["bromfiets", "brommer"] },
+      { key: "snorfiets", label: "snorfiets", article: "de", aliases: ["snorfiets"] },
+      { key: "scooter", label: "scooter", article: "de", aliases: ["scooter"] },
+      { key: "camper", label: "camper", article: "de", aliases: ["camper", "kampeerauto"] },
+      { key: "caravan", label: "caravan", article: "de", aliases: ["caravan"] },
+      { key: "aanhanger", label: "aanhanger", article: "de", aliases: ["aanhangwagen", "aanhanger", "trailer"] },
+      { key: "oldtimer", label: "oldtimer", article: "de", aliases: ["oldtimer"] },
+      { key: "auto", label: "auto", article: "de", aliases: ["personenauto", "auto", "wagen"] }
+    ];
+    const genericVehicleObject = { key: "voertuig", label: "voertuig", article: "het", aliases: [] };
+    let currentVehicleObject = genericVehicleObject;
+
+    function vehiclePhrase() {
+      return `${currentVehicleObject.article} ${currentVehicleObject.label}`;
+    }
+
+    function detectVehicleObject(text) {
+      const normalized = normalizeSpeech(text);
+      if (!normalized) return null;
+      const matches = [];
+      vehicleObjects.forEach(object => object.aliases.forEach(alias => {
+        const term = normalizeSpeech(alias);
+        const pattern = new RegExp(`(^|\\s)${term.replace(/[.*+?^${}()|[\\]\\]/g, "\\$&")}($|\\s)`);
+        if (pattern.test(normalized)) matches.push({ object, length: term.length });
+      }));
+      matches.sort((a, b) => b.length - a.length);
+      return matches[0]?.object || null;
+    }
+
+    function containsVehicleObject(text) {
+      return Boolean(detectVehicleObject(text));
+    }
+
+    function updateVehicleObjectUI() {
+      const phrase = vehiclePhrase();
+      const businessBox = document.getElementById("check_3_1a");
+      const registrationBox = document.getElementById("check_3_1b");
+      const businessText = `Heb je ${phrase} zakelijk gekocht of gefinancierd? Of gebruik je ${phrase} zakelijk?`;
+      const registrationText = `Op welke naam staat het kenteken van ${phrase}?`;
+
+      const businessLabel = businessBox?.closest(".checkline")?.querySelector(":scope > span");
+      if (businessLabel) businessLabel.textContent = businessText;
+      const registrationLabel = registrationBox?.closest(".checkline")?.querySelector(":scope > span");
+      if (registrationLabel) registrationLabel.innerHTML = `<strong>${registrationText}</strong>`;
+
+      if (overlayWindow && !overlayWindow.closed) {
+        const businessOverlay = overlayWindow.document.querySelector('[data-check-id="check_3_1a"] > span');
+        if (businessOverlay) businessOverlay.textContent = businessText;
+        const registrationOverlay = overlayWindow.document.querySelector('[data-check-id="check_3_1b"] > span');
+        if (registrationOverlay) registrationOverlay.innerHTML = `<strong>${registrationText}</strong>`;
+      }
+    }
+
+    function setVehicleObject(object) {
+      if (!object || currentVehicleObject.key === object.key) return;
+      currentVehicleObject = object;
+      updateVehicleObjectUI();
+    }
+
+    function resetVehicleObject() {
+      currentVehicleObject = genericVehicleObject;
+      updateVehicleObjectUI();
+    }
+
+    function updateVehicleObjectFromSpeech(text) {
+      if (!document.getElementById("check_3_0")?.checked) return;
+      const detected = detectVehicleObject(text);
+      if (detected) setVehicleObject(detected);
+    }
+
     const strictReadingTargets = {
       check_3_4: "We stellen je een paar vragen om te bekijken of wij je als klant kunnen verzekeren. Ben je niet eerlijk of volledig? Dan kunnen wij de verzekering stoppen en betalen wij je schade niet.",
-      check_3_5: "Heeft een verzekeraar in de afgelopen 5 jaar een verzekering van jou, een gezinslid of andere meeverzekerde personen opgezegd of geweigerd? Het gaat niet om verzekeringen die iemand zelf heeft opgezegd.",
+      check_3_5: "Heeft een verzekeraar in de afgelopen 5 jaar een verzekering van jou of personen die onder deze verzekering vallen, zoals bijvoorbeeld je gezinsleden of huisgenoten, opgezegd of geweigerd? Het gaat niet om verzekeringen die iemand zelf heeft opgezegd.",
       check_3_6: "Ben jij of 1 van de personen die je wilt meeverzekeren, voor een strafbaar feit in aanraking geweest met de politie of justitie? Zaken die ouder zijn dan 8 jaar hoef je niet op te geven. Het gaat om aanraking met politie of justitie als verdachte. Het gaat om een lopend onderzoek, een veroordeling of de uitvoering van een straf of maatregel.",
       check_3_6_sub: "Ontzegging van de rij- of vaarbevoegdheid alleen bij verkeersproducten. Diefstal, inbraak, verduistering, heling, bedrog, oplichting, valsheid in geschrifte. Vernieling, brandstichting, bedreiging, afpersing, chantage, stalking, gewapende overval. Mishandeling, doodslag, moord. Vrijheidsberoving, mensenhandel. Aanranding, verkrachting, ontucht met minderjarigen, bezit van kinderporno. Bezit of handel in wapens, munitie, vuurwerk. Bezit, kweken, vervaardigen, handelen, doorvoeren of invoeren van drugs. Misdrijven die te maken hebben met terrorisme, witwassen of deelname aan een criminele organisatie. Milieumisdrijven. Alle vormen van fraude en cybercriminaliteit.",
       check_3_7: "Heb jij, of 1 van de personen die je wilt meeverzekeren, in de afgelopen 5 jaar schade gemeld op 1 of meerdere verzekeringen?",
@@ -467,8 +540,8 @@
       check_2_4: ["communicatiewijze", "communicatie wijze", "communicatievoorkeur", "communicatie voorkeur", "wijze staat digitaal", "communicatie staat digitaal", "wijze is post", "wijze is digitaal", "post of digitaal"],
       check_3_0: ["berekenen jouw premie", "beoordelen je aanvraag automatisch", "automatische besluitvorming"],
       check_3_1: ["exacte premie", "totale premie", "totaalpremie", "de premie is", "jouw premie wordt", "uw premie wordt"],
-      check_3_1a: ["gebruik je de auto zakelijk", "auto zakelijk"],
-      check_3_1b: ["op welke naam staat het kenteken van de auto", "naam staat het kenteken", "kenteken van de auto"],
+      check_3_1a: ["zakelijk gekocht", "zakelijk gefinancierd", "zakelijk"],
+      check_3_1b: ["op welke naam staat het kenteken", "naam staat het kenteken", "kenteken staat op naam"],
       check_3_2: ["voorwaarden digitaal", "niet via de post", "niet per post"],
       check_3_3: ["centraal beheer toestemming", "bedrag van uw rekening af te schrijven", "toestemming om af te schrijven"],
       check_3_4: ["betalen wij je schade niet", "betalen we je schade niet"],
@@ -493,9 +566,8 @@
       const normalized = normalizeSpeech(word);
       const numbers = { een:"1", vijf:"5", acht:"8" };
       const politeVariants = {
-        je:"u", jij:"u", jou:"u", u:"u",
-        jouw:"uw", uw:"uw",
-        bent:"ben", heeft:"heb", hoeft:"hoef",
+        je:"u_vorm", jij:"u_vorm", jou:"u_vorm", jouw:"u_vorm", u:"u_vorm", uw:"u_vorm",
+        bent:"ben", heeft:"heb", hoeft:"hoef", wil:"wilt",
         bekijken:"kijken", we:"wij"
       };
       return numbers[normalized] || politeVariants[normalized] || normalized;
@@ -550,7 +622,7 @@
       check_2_4: text => hasAny(text, ["communicatiewijze", "communicatie wijze", "communicatievoorkeur", "communicatie voorkeur"]) && hasAny(text, ["post", "digitaal"]),
       check_3_0: text => text.includes("premie") && hasAny(text, ["automatisch", "beoordelen", "besluitvorming"]),
       check_3_1: text => text.includes("premie") && hasAny(text, ["exacte", "totaal", "totale"]),
-      check_3_1a: text => text.includes("auto") && text.includes("zakelijk"),
+      check_3_1a: text => text.includes("zakelijk") && (containsVehicleObject(text) || currentVehicleObject.key !== "voertuig"),
       check_3_1b: text => text.includes("kenteken") && hasAny(text, ["welke naam", "op naam", "naam staat"]),
       check_3_2: text => text.includes("voorwaarden") && hasAny(text, ["digitaal", "niet via de post", "niet per post"]),
       check_3_3: text => text.includes("toestemming") && hasAny(text, ["afschrijven", "af te schrijven", "rekening"]),
@@ -612,10 +684,15 @@
       boxes.forEach(box => {
         box.checked = false;
         localStorage.setItem("werkcheck_" + box.id, "false");
-        if (strictReadingTargets[box.id]) strictWordProgress[box.id] = 0;
+        if (strictReadingTargets[box.id]) {
+          strictWordProgress[box.id] = 0;
+          strictPreviewProgress[box.id] = 0;
+        }
       });
+      resetVehicleObject();
       setCommunicationMode(null);
       setCriminalAnswer(null);
+      syncOverlay();
     }
 
     function setCriminalAnswer(answer) {
@@ -774,13 +851,23 @@
           transcript.textContent = heard;
         }
         if (finalText.trim()) {
+          // Het voertuig wordt gespreksspecifiek herkend zodra de automatische
+          // besluitvorming is afgerond. Hierdoor veranderen objectgebonden
+          // vragen direct mee met auto, motor, brommer, camper, caravan, enz.
+          updateVehicleObjectFromSpeech(finalText);
           // Controleer uitsluitend deze nieuwe, afgeronde spraakuiting.
           // Te vroeg uitgesproken woorden worden dus niet onthouden.
           rollingFinalText = finalText.trim();
           processSpeech(finalText);
+          // Als juist deze uiting de automatische besluitvorming afrondde,
+          // probeer objectherkenning daarna nogmaals.
+          updateVehicleObjectFromSpeech(finalText);
           processAcceptanceAnswer(finalText);
         }
-        if (interimText.trim()) previewStrictReading(interimText);
+        if (interimText.trim()) {
+          updateVehicleObjectFromSpeech(interimText);
+          previewStrictReading(interimText);
+        }
       };
 
       recognition.onerror = event => {
@@ -1129,6 +1216,7 @@
     }
 
     const savedCriminalAnswer = localStorage.getItem("criminal_answer");
+    resetVehicleObject();
     applyCommunicationMode(localStorage.getItem("communication_mode"));
     if (savedCriminalAnswer === "yes") setCriminalAnswer(true);
     if (savedCriminalAnswer === "no") setCriminalAnswer(false);
