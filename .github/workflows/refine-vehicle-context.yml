@@ -1,0 +1,72 @@
+name: Refine vehicle context recognition
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  refine-checklist:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refine vehicle context
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          path = Path('index.html')
+          text = path.read_text(encoding='utf-8')
+
+          def replace_once(old, new, label):
+              global text
+              if old not in text:
+                  raise SystemExit(f'{label}: verwachte tekst niet gevonden')
+              text = text.replace(old, new, 1)
+
+          replace_once(
+              '    let currentVehicleObject = genericVehicleObject;\n',
+              '    let currentVehicleObject = genericVehicleObject;\n    let pendingVehicleObject = null;\n',
+              'pending voertuigcontext'
+          )
+
+          replace_once(
+              '''    function resetVehicleObject() {\n      currentVehicleObject = genericVehicleObject;\n      updateVehicleObjectUI();\n    }\n\n    function updateVehicleObjectFromSpeech(text) {\n      if (!document.getElementById("check_3_0")?.checked) return;\n      const detected = detectVehicleObject(text);\n      if (detected) setVehicleObject(detected);\n    }''',
+              '''    function resetVehicleObject() {\n      currentVehicleObject = genericVehicleObject;\n      pendingVehicleObject = null;\n      updateVehicleObjectUI();\n    }\n\n    function updateVehicleObjectFromSpeech(text) {\n      const detected = detectVehicleObject(text);\n      if (detected) pendingVehicleObject = detected;\n      if (!document.getElementById("check_3_0")?.checked) return;\n      const object = detected || pendingVehicleObject;\n      if (object) setVehicleObject(object);\n    }''',
+              'voertuigcontext voor en na automatische besluitvorming'
+          )
+
+          replace_once(
+              'check_3_1a: ["zakelijk gekocht", "zakelijk gefinancierd", "zakelijk"],',
+              'check_3_1a: ["zakelijk gekocht", "zakelijk gefinancierd", "gebruik je", "gebruikt u"],',
+              'zakelijke spraakregels'
+          )
+          replace_once(
+              'check_3_1a: text => text.includes("zakelijk") && (containsVehicleObject(text) || currentVehicleObject.key !== "voertuig"),',
+              'check_3_1a: text => text.includes("zakelijk") && hasAny(text, ["gekocht", "gefinancierd", "gebruik", "gebruikt"]),',
+              'zakelijke flexibele matcher'
+          )
+
+          path.write_text(text, encoding='utf-8')
+
+          # Controleer de JavaScript-syntax van het inline script voordat we committen.
+          updated = path.read_text(encoding='utf-8')
+          scripts = re.findall(r'<script>([\s\S]*?)</script>', updated)
+          if not scripts:
+              raise SystemExit('inline script niet gevonden')
+          Path('/tmp/checklist-script.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/checklist-script.js
+      - name: Commit refinement
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Refine vehicle context recognition"
+          git push
