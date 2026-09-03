@@ -460,6 +460,7 @@
     ];
     const genericVehicleObject = { key: "voertuig", label: "voertuig", article: "het", aliases: [] };
     let currentVehicleObject = genericVehicleObject;
+    let pendingVehicleObject = null;
 
     function vehiclePhrase() {
       return `${currentVehicleObject.article} ${currentVehicleObject.label}`;
@@ -510,13 +511,16 @@
 
     function resetVehicleObject() {
       currentVehicleObject = genericVehicleObject;
+      pendingVehicleObject = null;
       updateVehicleObjectUI();
     }
 
     function updateVehicleObjectFromSpeech(text) {
-      if (!document.getElementById("check_3_0")?.checked) return;
       const detected = detectVehicleObject(text);
-      if (detected) setVehicleObject(detected);
+      if (detected) pendingVehicleObject = detected;
+      if (!document.getElementById("check_3_0")?.checked) return;
+      const object = detected || pendingVehicleObject;
+      if (object) setVehicleObject(object);
     }
 
     const strictReadingTargets = {
@@ -540,7 +544,7 @@
       check_2_4: ["communicatiewijze", "communicatie wijze", "communicatievoorkeur", "communicatie voorkeur", "wijze staat digitaal", "communicatie staat digitaal", "wijze is post", "wijze is digitaal", "post of digitaal"],
       check_3_0: ["berekenen jouw premie", "beoordelen je aanvraag automatisch", "automatische besluitvorming"],
       check_3_1: ["exacte premie", "totale premie", "totaalpremie", "de premie is", "jouw premie wordt", "uw premie wordt"],
-      check_3_1a: ["zakelijk gekocht", "zakelijk gefinancierd", "zakelijk"],
+      check_3_1a: ["zakelijk gekocht", "zakelijk gefinancierd", "gebruik je", "gebruikt u"],
       check_3_1b: ["op welke naam staat het kenteken", "naam staat het kenteken", "kenteken staat op naam"],
       check_3_2: ["voorwaarden digitaal", "niet via de post", "niet per post"],
       check_3_3: ["centraal beheer toestemming", "bedrag van uw rekening af te schrijven", "toestemming om af te schrijven"],
@@ -622,7 +626,7 @@
       check_2_4: text => hasAny(text, ["communicatiewijze", "communicatie wijze", "communicatievoorkeur", "communicatie voorkeur"]) && hasAny(text, ["post", "digitaal"]),
       check_3_0: text => text.includes("premie") && hasAny(text, ["automatisch", "beoordelen", "besluitvorming"]),
       check_3_1: text => text.includes("premie") && hasAny(text, ["exacte", "totaal", "totale"]),
-      check_3_1a: text => text.includes("zakelijk") && (containsVehicleObject(text) || currentVehicleObject.key !== "voertuig"),
+      check_3_1a: text => text.includes("zakelijk") && hasAny(text, ["gekocht", "gefinancierd", "gebruik", "gebruikt"]),
       check_3_1b: text => text.includes("kenteken") && hasAny(text, ["welke naam", "op naam", "naam staat"]),
       check_3_2: text => text.includes("voorwaarden") && hasAny(text, ["digitaal", "niet via de post", "niet per post"]),
       check_3_3: text => text.includes("toestemming") && hasAny(text, ["afschrijven", "af te schrijven", "rekening"]),
