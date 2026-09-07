@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Compliance Overlay Lab – SAP mock</title>
+  <style>
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;background:#1e1e1e;color:#111}
+    button,input,select{font:inherit}
+    .labbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:8px 12px;background:#111;color:#fff;border-bottom:1px solid #444;position:sticky;top:0;z-index:1000}
+    .labbar strong{font-size:14px}
+    .labbar .badge{padding:5px 8px;border-radius:999px;background:#2b2b2b;font-size:12px;font-weight:700}
+    .labbar button{border:1px solid #666;border-radius:6px;background:#fff;color:#111;padding:6px 10px;cursor:pointer;font-weight:700}
+    .labbar .note{font-size:12px;color:#cfcfcf}
+    .desktop{position:relative;width:100%;min-width:1040px;background:#f3f3f3;overflow:hidden;border-top:1px solid #555}
+    .edge-tabs{height:42px;background:#202020;color:#eee;display:flex;align-items:end;padding:0 10px;gap:8px}
+    .edge-tab{height:34px;min-width:245px;max-width:360px;background:#2b2b2b;border-radius:9px 9px 0 0;padding:9px 14px;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .edge-tab.active{background:#333}
+    .edge-toolbar{height:48px;background:#292929;color:#eee;display:grid;grid-template-columns:38px 38px 38px 1fr 42px 42px;align-items:center;gap:6px;padding:0 10px}
+    .edge-icon{text-align:center;font-size:18px}
+    .address{height:34px;border:1px solid #555;border-radius:18px;background:#242424;padding:7px 16px;color:#ddd;font-size:13px;overflow:hidden;white-space:nowrap}
+    .favorites{height:44px;background:#2d2d2d;color:#eee;border-top:1px solid #3c3c3c;display:flex;align-items:center;gap:22px;padding:0 22px;font-size:13px}
+    .sap{background:#efefef;min-height:795px;border:1px solid #bcbcbc;position:relative}
+    .sap-top{height:52px;background:#fff;border-bottom:1px solid #aaa;display:flex;align-items:center;padding:0 26px;gap:12px}
+    .sap-logo{font-size:17px;font-weight:900;font-style:italic;color:#1594c6;border:2px solid #1594c6;padding:1px 4px;line-height:1}
+    .sap-title{font-size:21px;font-weight:700;color:#7f8c99}
+    .sap-links{margin-left:auto;display:flex;gap:24px;font-size:13px}
+    .sap-workbar{height:83px;background:#f7f7f7;border-bottom:1px solid #aaa;padding:7px 48px 8px 112px;display:grid;grid-template-columns:200px 390px 1fr 390px;gap:16px;align-items:start}
+    .ghostbox{height:47px;border:1px solid #a9c6df;background:#fff}
+    .sap-buttons{position:absolute;left:115px;top:102px;display:flex;gap:6px}
+    .sap-btn{background:#f7dd79;border:1px solid #867326;padding:3px 7px;font-size:12px;box-shadow:inset 0 0 0 1px #fff}
+    .searchbar{height:39px;background:#f7f7f7;border-bottom:1px solid #aaa;display:flex;justify-content:flex-end;align-items:center;padding-right:34px}
+    .saved{display:flex;align-items:center;gap:8px;background:#050505;color:#fff;height:32px;padding-left:14px;font-size:12px}
+    .saved input{height:23px;width:195px}
+    .pagehead{height:56px;background:linear-gradient(#f7f7f7,#dedede);border-top:1px solid #aaa;border-bottom:1px solid #aaa;display:flex;align-items:center;padding:0 14px;font-size:22px;font-weight:700;font-style:italic}
+    .sap-content{display:grid;grid-template-columns:220px 1fr;transition:grid-template-columns .18s ease}
+    .desktop.menu-closed .sap-content{grid-template-columns:18px 1fr}
+    .sap-sidebar{min-height:590px;background:#050505;color:#fff;border-right:1px solid #7c7c7c;overflow:hidden;transition:width .18s ease}
+    .desktop.menu-open .sap-sidebar{width:220px}
+    .desktop.menu-closed .sap-sidebar{width:18px}
+    .collapse-tab{height:28px;background:#090909;display:flex;justify-content:flex-end;align-items:center;padding-right:4px;color:#fff;font-size:12px}
+    .sideitems{padding:33px 14px 0;font-size:13px;font-weight:700;white-space:nowrap}
+    .sideitems div{margin:17px 0}
+    .sidegroup{margin-top:18px!important;border:1px solid #222;border-radius:2px;padding:8px 4px;font-size:15px}
+    .sidechildren{font-weight:400;margin-left:8px!important;line-height:1.65}
+    .desktop.menu-closed .sideitems{display:none}
+    .workarea{min-width:0;background:#ececec;padding:18px 16px 30px}
+    .tabs{height:31px;display:flex;align-items:end;gap:12px;font-size:13px}
+    .tabs .active{font-weight:700;border-bottom:2px solid #777;padding-bottom:4px}
+    .form{border-top:1px solid #ddd;padding-top:10px;display:grid;grid-template-columns:minmax(570px,1.1fr) minmax(430px,.9fr);column-gap:62px}
+    .leftform,.rightform{display:grid;grid-auto-rows:31px;align-items:center}
+    .row{display:grid;grid-template-columns:160px 1fr;gap:10px;align-items:center}
+    .row label{text-align:right;font-size:13px}
+    .row.multi{grid-template-columns:160px 90px 115px 90px 115px 90px}
+    .row.multi label{text-align:right}
+    .field{height:23px;border:1px solid #888;background:#fff;min-width:0}
+    .field.select{display:flex;align-items:center;padding:0 8px;justify-content:space-between;background:#fff}
+    .checks{display:flex;gap:42px;margin-left:170px;font-size:12px;align-items:center;height:31px}
+    .checks span{white-space:nowrap}
+    .actionrow{display:flex;gap:4px;margin:3px 0 6px}
+    .actionrow button{background:#f7dd79;border:1px solid #867326;padding:3px 8px;font-size:12px}
+    .section-title{font-weight:700;font-size:13px;margin:6px 0}
+    .gridbox{height:74px;border:1px solid #aaa;background:#f7f7f7;position:relative;overflow:hidden}
+    .gridhead{height:31px;background:linear-gradient(#f9f9f9,#dedede);display:grid;grid-template-columns:70px 130px 70px 180px 100px 110px 120px 90px 90px 90px 130px 110px 100px 95px 80px;font-size:11px;align-items:center;border-bottom:1px solid #aaa;white-space:nowrap}
+    .gridhead span{height:100%;padding:8px 6px;border-right:1px solid #aaa;overflow:hidden;text-overflow:ellipsis}
+    .filter{position:absolute;right:10px;top:-30px;font-size:12px;display:flex;gap:6px;align-items:center}
+    .filter input{width:150px;height:23px;border:1px solid #888;background:#fff}
+    .partner{margin-top:28px;position:relative}
+    .partner .gridhead{grid-template-columns:220px 230px 240px 210px 210px 210px 1fr}
+    .sap-status{height:22px;background:#e9e9e9;border-top:1px solid #aaa}
+    .windows{height:50px;background:#171717;color:#fff;display:flex;align-items:center;justify-content:center;gap:16px;font-size:14px}
+    .winbox{height:32px;width:270px;border-radius:18px;background:#303030;display:flex;align-items:center;padding-left:18px;color:#ccc}
+    .overlay-test{position:absolute;z-index:900;width:430px;height:655px;border:1px solid rgba(20,30,40,.35);border-radius:16px;overflow:hidden;background:rgba(255,255,255,.06);box-shadow:0 12px 38px rgba(0,0,0,.28);transition:left .22s ease,right .22s ease,top .22s ease,width .22s ease,height .22s ease}
+    .overlay-test iframe{width:100%;height:100%;border:0;display:block;background:transparent}
+    .desktop.menu-open .overlay-test{right:24px;top:296px;width:420px;height:610px}
+    .desktop.menu-closed .overlay-test{right:34px;top:296px;width:460px;height:650px}
+    .detector-tag{position:absolute;z-index:901;right:16px;top:254px;background:#111;color:#fff;border-radius:999px;padding:6px 10px;font-size:11px;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+    .mock-watermark{position:absolute;z-index:20;left:50%;top:280px;transform:translateX(-50%);font-size:72px;font-weight:900;color:rgba(0,0,0,.035);pointer-events:none;letter-spacing:.08em}
+    @media(max-width:1250px){.desktop{min-width:1040px}.form{grid-template-columns:1fr 420px;column-gap:24px}.desktop.menu-open .overlay-test{width:390px}.desktop.menu-closed .overlay-test{width:420px}}
+  </style>
+</head>
+<body>
+  <div class="labbar">
+    <strong>Overlay testvenster — geen echte SAP</strong>
+    <button id="toggleMenu" type="button">Klap linkermenu dicht</button>
+    <span id="detected" class="badge">Gedetecteerd: menu open</span>
+    <span class="note">De echte overlaybestanden worden niet aangepast. Alleen dit testvenster verandert.</span>
+  </div>
+
+  <div id="desktop" class="desktop menu-open">
+    <div class="mock-watermark">MOCK</div>
+    <div class="edge-tabs">
+      <div class="edge-tab active">SAP · Account identificeren — TEST</div>
+      <div class="edge-tab">Roosteroverzicht</div>
+    </div>
+    <div class="edge-toolbar">
+      <div class="edge-icon">←</div><div class="edge-icon">↻</div><div class="edge-icon">⌂</div>
+      <div class="address">🔒 https://sap.test.local/account-identificeren</div>
+      <div class="edge-icon">☆</div><div class="edge-icon">⋯</div>
+    </div>
+    <div class="favorites"><span>▣ Favorieten importeren</span><span>◉ CollegaPortaal</span><span>⚡ WFM CONTROL</span><span>◉ TRAFFIC COLLECTOR</span><span>◉ ASES Roosterplanning</span></div>
+
+    <div class="sap">
+      <div class="sap-top"><div class="sap-logo">SAP</div><div class="sap-title">1MedewerkersDesktop</div><div class="sap-links"><span>Delen</span><span>Personaliseren</span><span>Systeemmeldingen</span><span>Afmelden</span></div></div>
+      <div class="sap-workbar"><div class="ghostbox"></div><div class="ghostbox"></div><div class="ghostbox"></div><div class="ghostbox"></div></div>
+      <div class="sap-buttons"><button class="sap-btn">Nieuwe sessie</button><button class="sap-btn">✖ Annuleren</button></div>
+      <div class="searchbar"><div class="saved">Bewaarde zoekopdrachten ▼ <input aria-label="Bewaarde zoekopdracht"></div></div>
+      <div class="pagehead">Account identificeren</div>
+
+      <div class="sap-content">
+        <aside class="sap-sidebar" id="sidebar">
+          <div class="collapse-tab">◀</div>
+          <div class="sideitems">
+            <div>Extra klantgegevens</div><div>Werkvoorraad</div><div>Postbus zoeken</div><div>Zoeken toekomstpolis</div><div>Contactgerelateerde gegev.</div>
+            <div class="sidegroup">Start externe link</div><div class="sidechildren">Brein<br>Artikel 1MDW<br>Kortingsoverzicht<br>StreamServe Retouch</div>
+          </div>
+        </aside>
+
+        <main class="workarea">
+          <div class="tabs"><span>Details</span><span class="active">Persoon</span><span>Polisnr/Kenteken</span></div>
+          <div class="form">
+            <div class="leftform">
+              <div class="row"><label><b style="color:#b11">*</b> Merk:</label><div class="field select"><span>03 Centraal Beheer - Direct</span><span>▼</span></div></div>
+              <div class="checks"><span>☐ Zoek op oud adres</span><span>☐ Zoeken incl. gearchiveerde klanten</span></div>
+              <div class="row multi"><label>Postcode:</label><div class="field"></div><label>Huisnummer:</label><div class="field"></div><label>Toevoeging:</label><div class="field"></div></div>
+              <div class="row"><label>Achternaam:</label><div class="field"></div></div>
+              <div class="row multi"><label>Voorletters:</label><div class="field"></div><label style="grid-column:3/5">Geboortedatum:</label><div class="field" style="grid-column:5/7"></div></div>
+              <div class="row multi"><label>Klantnummer:</label><div class="field" style="grid-column:2/4"></div><div class="field select" style="grid-column:4/7"><span>Natuurlijk Persoon ID</span><span>▼</span></div></div>
+              <div class="actionrow"><button>Account zoeken</button><button>Ongedaan maken</button><button>▣ MDG Privéaccount</button></div>
+            </div>
+            <div class="rightform">
+              <div class="row"><label>Kanaal:</label><div class="field select"><span></span><span>▼</span></div></div>
+              <div></div>
+              <div class="row"><label>E-mail:</label><div class="field"></div></div>
+              <div class="row"><label>Telefoon:</label><div class="field" style="max-width:210px"></div></div>
+              <div class="row"><label>Straat:</label><div class="field" style="max-width:290px"></div></div>
+              <div class="row"><label>Plaats:</label><div class="field" style="max-width:290px"></div></div>
+            </div>
+          </div>
+
+          <div class="section-title">Resultaatlijst</div>
+          <div class="gridbox"><div class="filter">Filter: <input aria-label="Resultaatfilter"></div><div class="gridhead"><span>Bekend</span><span>Acties</span><span>Win...</span><span>Volledige naam</span><span>Geboorted...</span><span>Overlijdensd...</span><span>Straat</span><span>Huisnum...</span><span>Toevoeg...</span><span>Postcode</span><span>Plaats</span><span>Telefoon</span><span>Klantnu...</span><span>Account-ID</span><span>Archi...</span></div></div>
+
+          <div class="partner">
+            <div class="section-title">Bevestigde partners</div>
+            <div class="gridbox"><div class="filter">Filter: <input aria-label="Partnerfilter"></div><div class="gridhead"><span>Acties</span><span>Klant</span><span>BP nummer</span><span>Geboortedatum</span><span>Postcode</span><span>Plaats</span><span>Straat</span></div></div>
+          </div>
+        </main>
+      </div>
+      <div class="sap-status"></div>
+    </div>
+    <div class="windows"><span>⊞</span><div class="winbox">⌕ Zoeken</div><span>▣</span><span>Teams</span><span>Outlook</span><span>Edge</span></div>
+
+    <div id="detectorTag" class="detector-tag">AUTO · menu open</div>
+    <div class="overlay-test" id="overlayTest"><iframe id="overlayFrame" title="Huidige compliance overlay" src="overlay-frame.html?v=1"></iframe></div>
+  </div>
+
+  <script>
+    (()=>{
+      'use strict';
+      const desktop=document.getElementById('desktop');
+      const sidebar=document.getElementById('sidebar');
+      const toggle=document.getElementById('toggleMenu');
+      const detected=document.getElementById('detected');
+      const detectorTag=document.getElementById('detectorTag');
+      const frame=document.getElementById('overlayFrame');
+      let menuOpen=true;
+
+      const items=[
+        {id:'check_1_0',section:'Stap 1 · Klant identificeren',text:'Opvragen postcode/huisnummer of klantnummer',checked:false,hidden:false},
+        {id:'check_1_1',section:'Stap 1 · Klant identificeren',text:'Opvragen voorletter(s)',checked:false,hidden:false},
+        {id:'check_1_2',section:'Stap 1 · Klant identificeren',text:'Opvragen achternaam',checked:false,hidden:false},
+        {id:'check_1_3',section:'Stap 1 · Klant identificeren',text:'Opvragen geboortedatum',checked:false,hidden:false},
+        {id:'check_2_0',section:'Stap 2 · Contact en betalen',text:'Opvragen e-mailadres',checked:false,hidden:false},
+        {id:'check_2_1',section:'Stap 2 · Contact en betalen',text:'Opvragen telefoonnummer',checked:false,hidden:false},
+        {id:'check_2_2',section:'Stap 2 · Contact en betalen',text:'Opvragen collectiviteit',checked:false,hidden:false},
+        {id:'check_2_4',section:'Stap 2 · Contact en betalen',text:'Communicatiewijze bespreken: post of digitaal',checked:false,hidden:false},
+        {id:'check_2_3',section:'Stap 2 · Contact en betalen',text:'Opvragen bankrekening (IBAN/SEPA)',checked:false,hidden:false},
+        {id:'check_3_0',section:'Stap 3 · Aanvraag en afronding',text:'Voorlezen: “We berekenen jouw premie en beoordelen je aanvraag automatisch.”',checked:false,hidden:false},
+        {id:'check_3_1',section:'Stap 3 · Aanvraag en afronding',text:'Benoem de exacte premie: totale premie',checked:false,hidden:false},
+        {id:'check_3_4',section:'Stap 3 · Aanvraag en afronding',html:'<strong>Laatste vragen</strong><br>“We stellen je een paar vragen om te bekijken of wij je als klant kunnen verzekeren.”',checked:false,hidden:false}
+      ];
+
+      function snapshot(){
+        return {completed:0,total:items.length,openOnly:true,criminalAnswer:null,listening:false,status:'Testmodus · microfoon uit',items};
+      }
+      function sendSnapshot(){
+        if(!frame.contentWindow) return;
+        frame.contentWindow.postMessage({source:'checklist-overlay-host',type:'snapshot',data:snapshot()},location.origin);
+      }
+      frame.addEventListener('load',()=>setTimeout(sendSnapshot,50));
+      window.addEventListener('message',event=>{
+        if(event.origin!==location.origin||event.source!==frame.contentWindow) return;
+        if(event.data?.source==='checklist-overlay-frame'&&event.data?.action==='ready') sendSnapshot();
+      });
+
+      function detectLayout(){
+        const width=sidebar.getBoundingClientRect().width;
+        const detectedOpen=width>100;
+        menuOpen=detectedOpen;
+        desktop.classList.toggle('menu-open',detectedOpen);
+        desktop.classList.toggle('menu-closed',!detectedOpen);
+        detected.textContent='Gedetecteerd: menu '+(detectedOpen?'open':'dicht');
+        detectorTag.textContent='AUTO · menu '+(detectedOpen?'open':'dicht');
+        toggle.textContent=detectedOpen?'Klap linkermenu dicht':'Klap linkermenu open';
+      }
+
+      toggle.addEventListener('click',()=>{
+        const closing=desktop.classList.contains('menu-open');
+        desktop.classList.toggle('menu-open',!closing);
+        desktop.classList.toggle('menu-closed',closing);
+        requestAnimationFrame(()=>requestAnimationFrame(detectLayout));
+      });
+
+      if('ResizeObserver' in window){
+        new ResizeObserver(detectLayout).observe(sidebar);
+      }
+      window.addEventListener('resize',detectLayout);
+      detectLayout();
+    })();
+  </script>
+</body>
+</html>
