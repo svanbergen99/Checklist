@@ -4,6 +4,7 @@
 const data=window.ChecklistData;
 const state=window.ChecklistState;
 let overlayWindow=null;
+let overlayFrame=null;
 let openOnly=true;
 
 function sectionFor(id){
@@ -18,175 +19,103 @@ function sourceHtml(item){
   return item.html||item.text||item.id;
 }
 
-function decorateStrict(container,id){
-  if(!data.strictReadingTargets[id]) return;
-  const doc=container.ownerDocument;
-  const expected=window.ChecklistSpeech.strictTokens(id);
-  let index=0;
-  const walker=doc.createTreeWalker(container,doc.defaultView.NodeFilter.SHOW_TEXT);
-  const nodes=[];
-  while(walker.nextNode()) nodes.push(walker.currentNode);
-  for(const node of nodes){
-    const frag=doc.createDocumentFragment();
-    for(const part of node.textContent.split(/(\s+)/)){
-      if(!part||/^\s+$/.test(part)){frag.appendChild(doc.createTextNode(part));continue;}
-      const token=window.ChecklistSpeech.normalizeStrictWord(part);
-      if(index<expected.length&&token===expected[index]){
-        const span=doc.createElement('span');
-        span.className='strict-word';
-        span.dataset.strictIndex=String(index++);
-        span.textContent=part;
-        frag.appendChild(span);
-      }else frag.appendChild(doc.createTextNode(part));
-    }
-    node.replaceWith(frag);
-  }
+function strictTokens(id){
+  if(!data.strictReadingTargets[id]) return [];
+  return window.ChecklistSpeech.strictTokens(id);
 }
 
-function applyStrictProgress(id,progress){
-  if(!overlayWindow||overlayWindow.closed) return;
-  overlayWindow.document.querySelectorAll(`[data-check-id="${id}"], [data-strict-id="${id}"]`).forEach(target=>{
-    target.querySelectorAll('.strict-word').forEach(word=>word.classList.toggle('read',Number(word.dataset.strictIndex)<progress));
-  });
-}
-
-function renderRows(){
-  if(!overlayWindow||overlayWindow.closed) return;
-  const doc=overlayWindow.document;
-  const list=doc.getElementById('overlayList');
-  list.innerHTML='';
-  let previous='';
-
-  for(const item of data.allItems){
-    const section=sectionFor(item.id);
-    if(section!==previous){
-      const h=doc.createElement('div');
-      h.className='overlay-section';
-      h.textContent=section;
-      list.appendChild(h);
-      previous=section;
-    }
-
-    const row=doc.createElement('label');
-    row.className='overlay-row';
-    row.dataset.checkId=item.id;
-    const box=doc.createElement('input');
-    box.type='checkbox';
-    box.checked=state.getChecked(item.id);
-    box.addEventListener('change',()=>state.setChecked(item.id,box.checked,'overlay'));
-    const span=doc.createElement('span');
-    span.innerHTML=sourceHtml(item);
-    decorateStrict(span,item.id);
-    row.append(box,span);
-    list.appendChild(row);
-
-    if(item.answerButtons){
-      const answers=doc.createElement('div');
-      answers.className='overlay-answer';
-      answers.id='overlayCriminalAnswers';
-      answers.innerHTML='<button type="button" data-answer="no">Nee — klaar</button><button type="button" data-answer="yes">Ja — vervolg</button>';
-      answers.querySelector('[data-answer="no"]').addEventListener('click',()=>state.setCriminalAnswer(false,'overlay'));
-      answers.querySelector('[data-answer="yes"]').addEventListener('click',()=>state.setCriminalAnswer(true,'overlay'));
-      list.appendChild(answers);
-    }
-
-    if(item.subcategories){
-      const panel=doc.createElement('div');
-      panel.className='overlay-subcategories';
-      panel.id='overlaySubcategories';
-      panel.dataset.strictId=item.id;
-      const strong=doc.createElement('strong');
-      strong.textContent='Lees alle onderstaande subcategorieën voor:';
-      const ol=doc.createElement('ol');
-      for(const text of item.subcategories){
-        const li=doc.createElement('li');
-        li.textContent=text;
-        ol.appendChild(li);
-      }
-      panel.append(strong,ol);
-      decorateStrict(panel,item.id);
-      list.appendChild(panel);
-    }
-  }
-  sync();
-}
-
-function sync(){
-  if(!overlayWindow||overlayWindow.closed) return;
-  const doc=overlayWindow.document;
+function makeSnapshot(){
   const answer=state.getCriminalAnswer();
-  let completed=0;
-
-  for(const item of data.allItems){
-    if(state.getChecked(item.id)) completed++;
-    const row=doc.querySelector(`[data-check-id="${item.id}"]`);
-    if(!row) continue;
-    row.classList.toggle('checked',state.getChecked(item.id));
-    let hidden=!state.isVisible(item.id)||(openOnly&&state.getChecked(item.id));
+  const items=data.allItems.map(item=>{
+    const checked=state.getChecked(item.id);
+    let hidden=!state.isVisible(item.id)||(openOnly&&checked);
     if(item.id==='check_3_6'&&answer===null) hidden=false;
-    row.classList.toggle('hidden',hidden);
-    const box=row.querySelector('input[type="checkbox"]');
-    if(box) box.checked=state.getChecked(item.id);
-    if(item.vehicleRole){
-      const label=row.querySelector(':scope > span');
-      if(label) label.innerHTML=sourceHtml(item);
-    }
-    if(data.strictReadingTargets[item.id]) applyStrictProgress(item.id,window.ChecklistSpeech.currentProgress(item.id));
-  }
-
-  doc.querySelectorAll('.overlay-section').forEach(heading=>{
-    let next=heading.nextElementSibling;
-    let visible=false;
-    while(next&&!next.classList.contains('overlay-section')){
-      if(next.classList.contains('overlay-row')&&!next.classList.contains('hidden')) visible=true;
-      next=next.nextElementSibling;
-    }
-    heading.hidden=!visible;
+    return {
+      id:item.id,
+      section:sectionFor(item.id),
+      html:sourceHtml(item),
+      checked,
+      hidden,
+      answerButtons:Boolean(item.answerButtons),
+      answerHidden:Boolean(item.answerButtons&&openOnly&&answer!==null),
+      subcategories:item.subcategories||null,
+      subcategoriesHidden:Boolean(item.subcategories&&(answer!=='yes'||(openOnly&&checked))),
+      strictTokens:strictTokens(item.id),
+      strictProgress:data.strictReadingTargets[item.id]?window.ChecklistSpeech.currentProgress(item.id):0
+    };
   });
 
-  doc.getElementById('overlayEmpty')?.remove();
-  if(openOnly&&completed===state.totalCount()){
-    const empty=doc.createElement('div');
-    empty.id='overlayEmpty';
-    empty.className='overlay-empty';
-    empty.textContent='✓ Alle controlepunten zijn afgevinkt';
-    doc.getElementById('overlayList').appendChild(empty);
-  }
-
-  doc.getElementById('overlayProgress').textContent=`${completed}/${state.totalCount()} gereed`;
-  const filter=doc.getElementById('overlayFilter');
-  if(filter) filter.checked=openOnly;
-  const listen=doc.getElementById('overlayListen');
-  if(listen){
-    listen.classList.toggle('active',window.ChecklistSpeech.isListening());
-    listen.disabled=window.ChecklistSpeech.isListening();
-    listen.textContent=window.ChecklistSpeech.isListening()?'🎙 Luistert…':'🎙 Meeluisteren';
-  }
-  const status=doc.getElementById('overlayStatus');
-  if(status) status.textContent=window.ChecklistSpeech.status();
-
-  const answers=doc.getElementById('overlayCriminalAnswers');
-  if(answers){
-    answers.hidden=openOnly&&answer!==null;
-    answers.querySelector('[data-answer="no"]').classList.toggle('selected',answer==='no');
-    answers.querySelector('[data-answer="yes"]').classList.toggle('selected',answer==='yes');
-  }
-  const subs=doc.getElementById('overlaySubcategories');
-  if(subs) subs.hidden=answer!=='yes'||(openOnly&&state.getChecked('check_3_6_sub'));
+  return {
+    completed:data.allItems.filter(item=>state.getChecked(item.id)).length,
+    total:state.totalCount(),
+    openOnly,
+    criminalAnswer:answer,
+    listening:window.ChecklistSpeech.isListening(),
+    status:window.ChecklistSpeech.status(),
+    items
+  };
 }
 
-function build(){
+function sendSnapshot(){
+  if(!overlayFrame||!overlayFrame.contentWindow) return;
+  overlayFrame.contentWindow.postMessage({
+    source:'checklist-overlay-host',
+    type:'snapshot',
+    data:makeSnapshot()
+  },location.origin);
+}
+
+function handleAction(message){
+  if(message?.source!=='checklist-overlay-frame') return;
+
+  if(message.action==='ready'){
+    sendSnapshot();
+    return;
+  }
+  if(message.action==='setChecked'){
+    state.setChecked(message.id,Boolean(message.checked),'overlay-iframe');
+    return;
+  }
+  if(message.action==='criminalAnswer'){
+    state.setCriminalAnswer(Boolean(message.answer),'overlay-iframe');
+    return;
+  }
+  if(message.action==='setOpenOnly'){
+    openOnly=Boolean(message.value);
+    sendSnapshot();
+    return;
+  }
+  if(message.action==='startListening'){
+    window.ChecklistSpeech.start();
+    return;
+  }
+  if(message.action==='endConversation'){
+    window.ChecklistApp.endConversation();
+  }
+}
+
+function handleFrameMessage(event){
+  if(!overlayFrame||event.source!==overlayFrame.contentWindow||event.origin!==location.origin) return;
+  handleAction(event.data);
+}
+
+function buildFrame(){
+  if(!overlayWindow||overlayWindow.closed) return;
   const doc=overlayWindow.document;
-  doc.head.innerHTML='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compliance overlay</title>';
-  const link=doc.createElement('link');
-  link.rel='stylesheet';
-  link.href=new URL('overlay.css',window.location.href).href;
-  doc.head.appendChild(link);
-  doc.body.innerHTML=`<div class="overlay-shell"><header class="overlay-head"><div class="overlay-title"><strong>✓ Compliance</strong><span id="overlayProgress"></span></div><div class="overlay-controls"><button id="overlayListen" type="button">🎙 Meeluisteren</button><button id="overlayEnd" type="button">Einde gesprek</button></div><label class="overlay-filter"><input id="overlayFilter" type="checkbox" checked> Alleen openstaande punten</label><div id="overlayStatus">Microfoon staat uit</div></header><main id="overlayList"></main></div>`;
-  doc.getElementById('overlayListen').addEventListener('click',()=>window.ChecklistSpeech.start());
-  doc.getElementById('overlayEnd').addEventListener('click',()=>window.ChecklistApp.endConversation());
-  doc.getElementById('overlayFilter').addEventListener('change',event=>{openOnly=event.target.checked;sync();});
-  renderRows();
+  doc.head.innerHTML='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compliance overlay</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}iframe{width:100%;height:100%;border:0;display:block;background:transparent}</style>';
+  doc.body.innerHTML='';
+  overlayFrame=doc.createElement('iframe');
+  overlayFrame.title='Compliance overlay';
+  overlayFrame.allow='microphone';
+  overlayFrame.src=new URL('overlay-frame.html?v=1',window.location.href).href;
+  overlayFrame.addEventListener('load',()=>{
+    try{
+      overlayFrame.contentWindow.ChecklistOverlayBridge={action:handleAction};
+      sendSnapshot();
+    }catch(_){ }
+  });
+  doc.body.append(overlayFrame);
+  overlayWindow.addEventListener('message',handleFrameMessage);
 }
 
 async function open(){
@@ -195,25 +124,36 @@ async function open(){
     alert('Deze Edge-versie ondersteunt het zwevende overlayvenster niet. Werk Edge bij en probeer het opnieuw.');
     return;
   }
-  if(overlayWindow&&!overlayWindow.closed){overlayWindow.focus();return;}
+  if(overlayWindow&&!overlayWindow.closed){
+    overlayWindow.focus();
+    return;
+  }
+
   try{
-    overlayWindow=await window.documentPictureInPicture.requestWindow({width:430,height:720});
+    overlayWindow=await window.documentPictureInPicture.requestWindow({width:460,height:720});
     if(button) button.textContent='Overlay geopend';
-    build();
+    buildFrame();
     overlayWindow.addEventListener('pagehide',()=>{
+      try{overlayWindow?.removeEventListener('message',handleFrameMessage);}catch(_){ }
+      overlayFrame=null;
       overlayWindow=null;
       if(button) button.textContent='Open overlay';
     },{once:true});
   }catch(_){
+    overlayFrame=null;
     overlayWindow=null;
     if(button) button.textContent='Open overlay';
     alert('De overlay kon niet worden geopend. Controleer of Edge dit bestand toestemming geeft voor Picture-in-Picture.');
   }
 }
 
-state.bus.addEventListener('change',sync);
-state.bus.addEventListener('listeningchange',sync);
-state.bus.addEventListener('strictprogress',event=>applyStrictProgress(event.detail.id,event.detail.progress));
+state.bus.addEventListener('change',sendSnapshot);
+state.bus.addEventListener('listeningchange',sendSnapshot);
+state.bus.addEventListener('strictprogress',sendSnapshot);
 
-window.ChecklistOverlay={open,sync,isOpen:()=>Boolean(overlayWindow&&!overlayWindow.closed)};
+window.ChecklistOverlay={
+  open,
+  sync:sendSnapshot,
+  isOpen:()=>Boolean(overlayWindow&&!overlayWindow.closed)
+};
 })();
