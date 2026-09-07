@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>Compliance overlay</title>
+  <link rel="stylesheet" href="overlay-frame.css?v=1">
+</head>
+<body>
+  <div class="glass-shell">
+    <header class="glass-head">
+      <div class="title-line">
+        <strong>✓ Compliance</strong>
+        <span id="overlayProgress">0/0 gereed</span>
+      </div>
+      <div class="controls">
+        <button id="overlayListen" type="button">🎙 Meeluisteren</button>
+        <button id="overlayEnd" type="button">Einde gesprek</button>
+      </div>
+      <div class="utility-line">
+        <label><input id="overlayFilter" type="checkbox" checked> Alleen openstaand</label>
+        <span id="overlayStatus">Microfoon staat uit</span>
+      </div>
+    </header>
+    <main id="overlayList" aria-live="polite"></main>
+  </div>
+  <script src="overlay-frame.js?v=1"></script>
+</body>
+</html>
