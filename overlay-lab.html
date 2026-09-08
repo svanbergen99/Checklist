@@ -6,185 +6,212 @@
 <title>Account identificeren</title>
 <style>
 *{box-sizing:border-box}
-html,body{margin:0;width:100%;height:100%;font-family:Arial,Helvetica,sans-serif;background:#ececec;color:#000;overflow:hidden}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#ececec;font-family:Arial,Helvetica,sans-serif;color:#000}
 button,input{font:inherit}
-.screen{position:relative;width:100%;height:100%;min-width:1180px;min-height:660px;background:#ececec}
+#fit{position:absolute;left:0;top:0;width:1905px;height:868px;transform-origin:0 0}
+.screen{position:relative;width:1905px;height:868px;background:#ececec;overflow:hidden;font-size:14px}
 
-.top{height:46px;background:#fff;border-top:2px solid #999;border-bottom:5px solid #061525;display:flex;align-items:center;padding:0 28px;gap:12px}
-.sap-logo{font-weight:900;font-style:italic;font-size:17px;color:#118ec2;border:2px solid #118ec2;line-height:1;padding:1px 4px}
-.desktop-title{font-weight:700;font-size:21px;color:#788897}
-.top-links{margin-left:auto;display:flex;gap:25px;font-size:13px}
+/* Bovenste SAP-balk */
+.top{position:absolute;left:0;top:0;width:100%;height:47px;background:#fff;border-top:2px solid #aaa;border-bottom:5px solid #071523;display:flex;align-items:center;padding:0 28px}
+.sap-logo{width:59px;height:29px;background:#0b92c7;color:#fff;font-size:19px;font-weight:900;font-style:italic;line-height:29px;text-align:center;transform:skew(-11deg);margin-right:10px}
+.sap-logo span{display:block;transform:skew(11deg)}
+.desktop-title{font-size:22px;font-weight:700;color:#778797}
+.top-links{margin-left:auto;display:flex;gap:0;font-size:13px;align-items:center;height:100%}
+.top-links span{padding:0 24px;border-right:1px solid #bfc4c9}
+.top-links span:last-child{padding-right:0;border-right:0}
 
-.session-area{height:92px;background:#fafafa;border-bottom:1px solid #aaa;position:relative}
-.session-icon{position:absolute;left:48px;top:17px;font-size:23px;color:#777}
-.session-boxes{position:absolute;left:123px;right:8px;top:4px;display:grid;grid-template-columns:214px 1fr 1fr 1fr;gap:17px}
-.session-box{height:53px;border:1px solid #a9c6de;background:#fff}
-.session-actions{position:absolute;left:128px;bottom:4px;display:flex;gap:4px}
-.sap-action{height:24px;padding:1px 7px;border:1px solid #76651d;background:linear-gradient(#fff8b1,#ddc356);box-shadow:inset 0 0 0 1px #fff;font-size:12px}
-.right-select{position:absolute;right:27px;bottom:7px;width:170px;height:22px;border:1px solid #777;background:#fff}
+/* Sessiegedeelte */
+.session{position:absolute;left:0;top:47px;width:100%;height:92px;background:#fbfbfb;border-bottom:1px solid #a8a8a8}
+.session-icon{position:absolute;left:46px;top:17px;width:25px;height:25px;border:2px solid #aaa;background:#f2f2df;box-shadow:inset 0 0 0 3px #fff}
+.session-icon:after{content:'';position:absolute;left:5px;top:5px;width:11px;height:13px;border:1px solid #777;background:#ffffe6}
+.session-boxes{position:absolute;left:124px;right:8px;top:5px;display:grid;grid-template-columns:216px 1fr 1fr 1fr;gap:18px}
+.session-box{height:53px;border:1px solid #a8c4dd;background:#fff}
+.session-dot{position:absolute;left:47px;bottom:10px;width:20px;height:20px;background:#b9cee5}
+.session-actions{position:absolute;left:129px;bottom:4px;display:flex;gap:4px}
+.sap-action{height:24px;padding:1px 8px;border:1px solid #75641a;background:linear-gradient(#fffac1,#d8bd46);box-shadow:inset 0 0 0 1px #fff;font-size:12px}
+.right-select{position:absolute;right:27px;bottom:6px;width:171px;height:22px;border:1px solid #777;background:#fff}
+.right-select:after{content:'⌄';position:absolute;right:2px;top:-2px;font-size:17px}
 
-.search-row{height:39px;background:#f7f7f7;border-bottom:1px solid #a9a9a9;display:flex;justify-content:flex-end;align-items:center;padding-right:22px}
-.saved{height:31px;background:#050505;color:#fff;display:flex;align-items:center;padding:0 12px;font-size:12px;gap:10px}
-.saved input{width:183px;height:22px;border:1px solid #ccc;background:#fff}
-.saved .muted{color:#222}
+/* Zoekbalk */
+.search-row{position:absolute;left:0;top:139px;width:100%;height:38px;background:#f6f6f6;border-bottom:1px solid #a7a7a7}
+.saved{position:absolute;right:8px;top:0;height:31px;background:#050505;color:#fff;display:flex;align-items:center;font-size:12px}
+.saved-title{padding:0 14px;white-space:nowrap}
+.saved-field{width:184px;height:22px;background:#fff;border:1px solid #bbb;margin-right:9px;position:relative}
+.saved-field:after{content:'▼';position:absolute;right:4px;top:2px;color:#16304f;font-size:10px}
+.saved-muted{color:#202020;padding:0 8px 0 0;white-space:nowrap}
 
-.content-shell{position:absolute;left:0;right:0;top:177px;bottom:23px;display:grid;grid-template-columns:209px minmax(0,1fr);transition:grid-template-columns .12s ease}
-.screen.menu-closed .content-shell{grid-template-columns:0 minmax(0,1fr)}
-
-.sidebar{position:relative;min-width:0;height:100%;background:#030303;color:#fff;border-right:1px solid #777;overflow:hidden}
+/* Hoofdgebied + menu */
+.content{position:absolute;left:0;right:0;top:177px;bottom:23px;display:grid;grid-template-columns:209px 1fr}
+.screen.menu-closed .content{grid-template-columns:0 1fr}
+.sidebar{position:relative;height:100%;background:#030303;color:#fff;border-right:1px solid #777;overflow:hidden}
 .screen.menu-closed .sidebar{overflow:visible}
-.side-list{padding-top:55px;font-size:13px;font-weight:700;white-space:nowrap}
 .screen.menu-closed .side-list{display:none}
-.side-list>.side-item{height:32px;padding:8px 23px;border-bottom:1px solid #151515}
-.side-group{margin:17px 10px 0;height:34px;padding:7px 15px;border:1px solid #222;background:#101010;font-size:15px;font-weight:700}
-.side-links{padding:3px 33px 0;font-size:13px;font-weight:400;line-height:1.72}
-
-.menu-toggle{position:absolute;z-index:30;top:0;width:22px;height:30px;border:0;background:#030303;cursor:pointer;padding:0}
+.side-list{padding-top:56px;font-size:13px;font-weight:700;white-space:nowrap}
+.side-item{height:32px;padding:8px 23px;border-bottom:1px solid #171717}
+.side-group{margin:17px 10px 0;height:35px;padding:7px 15px;border:1px solid #222;background:#111;font-size:15px}
+.side-links{padding:3px 33px 0;font-weight:400;line-height:1.72}
+.menu-toggle{position:absolute;z-index:50;top:0;width:22px;height:30px;border:0;background:#030303;padding:0;cursor:pointer}
 .menu-toggle:focus-visible{outline:2px solid #fff;outline-offset:-2px}
-.menu-toggle::after{content:"";position:absolute;top:8px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent}
-.screen.menu-open .menu-toggle{right:0;border-radius:12px 0 0 12px}
-.screen.menu-open .menu-toggle::after{right:6px;border-right:7px solid #fff}
-.screen.menu-closed .menu-toggle{left:0;border-radius:0 14px 14px 0}
-.screen.menu-closed .menu-toggle::after{left:6px;border-left:7px solid #fff}
+.menu-toggle:after{content:'';position:absolute;top:8px;width:0;height:0;border-top:7px solid transparent;border-bottom:7px solid transparent}
+.screen.menu-open .menu-toggle{right:0;border-radius:13px 0 0 13px}
+.screen.menu-open .menu-toggle:after{right:5px;border-right:7px solid #fff}
+.screen.menu-closed .menu-toggle{left:0;border-radius:0 13px 13px 0}
+.screen.menu-closed .menu-toggle:after{left:5px;border-left:7px solid #fff}
 
-.main-pane{min-width:0;height:100%;background:#ececec;overflow:hidden}
-.page-title{height:55px;background:linear-gradient(#f7f7f7,#dcdcdc);border-bottom:1px solid #aaa;position:relative;display:flex;align-items:flex-start;padding:7px 0 0 14px;font-weight:700;font-style:italic;font-size:22px}
-.top-status{position:absolute;right:9px;bottom:4px;font-size:13px;color:#111}
-.work{height:calc(100% - 55px);position:relative;min-width:0;background:#ececec;padding:24px 13px 30px 14px}
-.subtabs{height:31px;border-bottom:1px solid #cfcfcf;display:flex;gap:12px;align-items:flex-start;padding-left:2px;font-size:13px}
+.main{position:relative;min-width:0;height:100%;background:#ececec;overflow:hidden}
+.page-title{position:absolute;left:0;top:0;right:0;height:55px;background:linear-gradient(#f7f7f7,#dcdcdc);border-bottom:1px solid #a5a5a5;font-size:22px;font-weight:700;font-style:italic;padding:5px 0 0 14px}
+.page-nav{position:absolute;right:8px;top:2px;font-size:12px;color:#9aa8b5;font-style:normal;font-weight:400}
+.page-status{position:absolute;right:8px;bottom:3px;font-size:13px;font-style:normal;font-weight:400}
+.closed-chip{display:none;position:absolute;left:208px;top:37px;height:30px;background:#293b52;color:#fff;padding:7px 10px;font-size:13px;font-style:normal;font-weight:400;border:1px solid #7c8997}
+.screen.menu-closed .closed-chip{display:block}
+
+.work{position:absolute;left:0;right:0;top:55px;bottom:0;background:#ececec}
+.subtabs{position:absolute;left:17px;top:29px;height:25px;display:flex;gap:11px;align-items:flex-start;font-size:13px}
 .subtabs .active{font-weight:700}
+.rule{position:absolute;left:13px;right:12px;top:53px;border-top:1px solid #c8c8c8}
 
-.form-area{padding-top:7px;display:grid;grid-template-columns:minmax(650px,1.05fr) minmax(480px,.95fr);column-gap:74px}
-.left,.right{display:grid;grid-auto-rows:29px;align-items:center}
-.frow{display:grid;grid-template-columns:155px 1fr;align-items:center;gap:8px}
+.form-left,.form-right{position:absolute;top:65px}
+.screen.menu-open .form-left{left:160px;width:655px}
+.screen.menu-closed .form-left{left:220px;width:705px}
+.screen.menu-open .form-right{left:915px;width:565px}
+.screen.menu-closed .form-right{left:1035px;width:565px}
+.frow{height:29px;display:grid;grid-template-columns:155px 1fr;gap:8px;align-items:center}
 .frow label{text-align:right;font-size:13px;white-space:nowrap}
-.field{height:23px;border:1px solid #777;background:#fff}
-.field.select{display:flex;align-items:center;justify-content:space-between;padding-left:7px}
-.field.select:after{content:'▼';font-size:11px;background:#d6dde4;border-left:1px solid #888;height:100%;width:20px;display:flex;align-items:center;justify-content:center}
-.mini-line{display:grid;grid-template-columns:155px 84px 105px 84px 105px 84px;gap:8px;align-items:center}
-.mini-line label{text-align:right;font-size:13px;white-space:nowrap}
-.checks{display:flex;gap:58px;padding-left:164px;font-size:12px;white-space:nowrap}
-.checkbox{display:inline-block;width:15px;height:15px;border:1px solid #777;background:#fff;vertical-align:-3px;margin-left:8px}
+.field{height:23px;border:1px solid #777;background:#fff;position:relative}
+.field.select:after{content:'▼';position:absolute;right:0;top:0;width:20px;height:21px;border-left:1px solid #777;background:#d7dee5;display:flex;align-items:center;justify-content:center;font-size:10px;color:#1e324a}
+.checks{height:29px;display:flex;align-items:center;padding-left:164px;gap:58px;font-size:12px;white-space:nowrap}
+.checkbox{display:inline-block;width:15px;height:15px;border:1px solid #777;background:#fff;margin-left:8px;vertical-align:-3px}
+.multi{height:29px;display:grid;grid-template-columns:155px 85px 105px 85px 105px 85px;gap:8px;align-items:center}
+.multi label{text-align:right;font-size:13px;white-space:nowrap}
 .action-line{display:flex;gap:4px;margin-top:1px}
-.form-button{height:23px;padding:1px 8px;border:1px solid #78661d;background:linear-gradient(#fff8ae,#e0c85a);box-shadow:inset 0 0 0 1px #fff;font-size:12px}
-.right .frow{grid-template-columns:115px 1fr}
-.right .short{max-width:190px}
-.right .medium{max-width:290px}
+.form-button{height:23px;padding:1px 8px;border:1px solid #78661d;background:linear-gradient(#fff8ad,#ddc450);box-shadow:inset 0 0 0 1px #fff;font-size:12px}
+.form-right .frow{grid-template-columns:115px 1fr}
+.form-right .short{width:190px}
+.form-right .medium{width:290px}
 
-.section-title{font-size:13px;font-weight:700;margin:4px 0 10px 0}
-.table-wrap{position:relative;height:60px;border:1px solid #a3a3a3;background:#f7f7f7}
-.filter{position:absolute;right:11px;top:-27px;font-size:12px;display:flex;align-items:center;gap:5px}
-.filter input{width:170px;height:22px;border:1px solid #777;background:#fff}
-.thead{height:29px;margin-top:28px;display:grid;grid-template-columns:70px 130px 58px 190px 98px 100px 126px 90px 87px 84px 128px 105px 91px 89px 65px;background:linear-gradient(#f7f7f7,#ddd);border-top:1px solid #aaa;font-size:11px;white-space:nowrap;overflow:hidden}
-.thead span{padding:7px 6px;border-right:1px solid #aaa;overflow:hidden;text-overflow:ellipsis}
-.partners{margin-top:38px}
-.partners .table-wrap{height:59px}
-.partners .thead{grid-template-columns:220px 225px 230px 210px 210px 210px 1fr}
+.result-title{position:absolute;left:14px;top:260px;font-size:13px;font-weight:700}
+.result{position:absolute;left:14px;right:13px;top:289px;height:61px;border:1px solid #aaa;background:#f6f6f6}
+.filter{position:absolute;right:10px;top:-27px;display:flex;align-items:center;gap:6px;font-size:12px}
+.filter-box{width:171px;height:22px;border:1px solid #777;background:#fff}
+.pencil{font-size:18px;color:#233852;transform:rotate(-28deg)}
+.table-head{position:absolute;left:0;right:0;bottom:0;height:30px;display:grid;background:linear-gradient(#fafafa,#ddd);border-top:1px solid #aaa;font-size:11px;white-space:nowrap;overflow:hidden}
+.table-head.result-cols{grid-template-columns:70px 130px 58px 190px 98px 100px 126px 90px 87px 84px 128px 105px 91px 89px 65px}
+.table-head.partner-cols{grid-template-columns:220px 225px 230px 210px 210px 210px 1fr}
+.table-head span{padding:7px 6px;border-right:1px solid #aaa;overflow:hidden;text-overflow:ellipsis}
+.partner-title{position:absolute;left:14px;top:392px;font-size:13px;font-weight:700}
+.partner{position:absolute;left:14px;right:13px;top:421px;height:60px;border:1px solid #aaa;background:#f6f6f6}
 
-.statusbar{position:absolute;left:0;right:0;bottom:0;height:23px;background:linear-gradient(#edf3f7,#dce5ec);border-top:1px solid #9eabb5;box-shadow:inset 0 1px 0 #fff}
+/* Help-icoon rechts */
+.help{position:absolute;right:0;top:235px;width:61px;height:61px;background:#ffb51b;border:1px solid #ffaf00}
+.help:before{content:'';position:absolute;left:12px;top:9px;width:34px;height:34px;border:4px solid #fff;border-radius:50%}
+.help:after{content:'';position:absolute;left:8px;top:31px;width:8px;height:17px;border-left:4px solid #fff;border-bottom:4px solid #fff;border-radius:0 0 0 8px;box-shadow:37px 0 0 -2px #ffb51b}
+
+.statusbar{position:absolute;left:0;right:0;bottom:0;height:23px;background:linear-gradient(#eef4f8,#dbe5ec);border-top:1px solid #9faab5;box-shadow:inset 0 1px 0 #fff}
 .clock{position:absolute;right:10px;bottom:3px;font-size:13px;color:#174d91;white-space:nowrap}
-
-@media(max-width:1350px){
-  .form-area{grid-template-columns:minmax(590px,1fr) 430px;column-gap:30px}
-}
 </style>
 </head>
 <body>
-<div id="screen" class="screen menu-open">
-  <div class="top">
-    <div class="sap-logo">SAP</div>
-    <div class="desktop-title">1MedewerkersDesktop</div>
-    <div class="top-links"><span>Delen</span><span>Personaliseren</span><span>Systeemmeldingen</span><span>Afmelden</span></div>
-  </div>
+<div id="fit">
+  <div id="screen" class="screen menu-open">
+    <div class="top">
+      <div class="sap-logo"><span>SAP</span></div>
+      <div class="desktop-title">1MedewerkersDesktop</div>
+      <div class="top-links"><span>Delen</span><span>Personaliseren</span><span>Systeemmeldingen</span><span>Afmelden</span></div>
+    </div>
 
-  <div class="session-area">
-    <div class="session-icon">▣</div>
-    <div class="session-boxes"><div class="session-box"></div><div class="session-box"></div><div class="session-box"></div><div class="session-box"></div></div>
-    <div class="session-actions"><button class="sap-action">Nieuwe sessie</button><button class="sap-action">✖ Annuleren</button></div>
-    <input class="right-select" aria-label="Selectieveld">
-  </div>
+    <div class="session">
+      <div class="session-icon"></div>
+      <div class="session-boxes"><div class="session-box"></div><div class="session-box"></div><div class="session-box"></div><div class="session-box"></div></div>
+      <div class="session-dot"></div>
+      <div class="session-actions"><button class="sap-action">Nieuwe sessie</button><button class="sap-action">✖ Annuleren</button></div>
+      <div class="right-select"></div>
+    </div>
 
-  <div class="search-row"><div class="saved">Bewaarde zoekopdrachten ▼ <input aria-label="Bewaarde zoekopdracht"><span class="muted">Start&nbsp;&nbsp;&nbsp;Uitgebreid&nbsp;&nbsp;▮</span></div></div>
+    <div class="search-row">
+      <div class="saved"><span class="saved-title">Bewaarde zoekopdrachten ▼</span><div class="saved-field"></div><span class="saved-muted">Start&nbsp;&nbsp;&nbsp;Uitgebreid&nbsp;&nbsp;▮</span></div>
+    </div>
 
-  <div class="content-shell">
-    <aside class="sidebar" aria-label="Linkernavigatie">
-      <button id="menuToggle" class="menu-toggle" type="button" aria-label="Linker menu open- of dichtklappen"></button>
-      <div class="side-list">
-        <div class="side-item">Extra klantgegevens</div>
-        <div class="side-item">Werkvoorraad</div>
-        <div class="side-item">Postbus zoeken</div>
-        <div class="side-item">Zoeken toekomstpolis</div>
-        <div class="side-item">Contactgerelateerde gegev.</div>
-        <div class="side-group">Start externe link</div>
-        <div class="side-links">Brein<br>Artikel 1MDW<br>Kortingsoverzicht<br>StreamServe Retouch</div>
-      </div>
-    </aside>
+    <div class="content">
+      <aside class="sidebar">
+        <button id="menuToggle" class="menu-toggle" type="button" aria-label="Linker menu open- of dichtklappen"></button>
+        <div class="side-list">
+          <div class="side-item">Extra klantgegevens</div>
+          <div class="side-item">Werkvoorraad</div>
+          <div class="side-item">Postbus zoeken</div>
+          <div class="side-item">Zoeken toekomstpolis</div>
+          <div class="side-item">Contactgerelateerde gegev.</div>
+          <div class="side-group">Start externe link</div>
+          <div class="side-links">Brein<br>Artikel 1MDW<br>Kortingsoverzicht<br>StreamServe Retouch</div>
+        </div>
+      </aside>
 
-    <section class="main-pane">
-      <div class="page-title">Account identificeren <div class="top-status">⋮&nbsp;&nbsp;✓&nbsp; (1)&nbsp; ⋮</div></div>
-      <main class="work">
-        <div class="subtabs"><span>Details</span><span class="active">Persoon</span><span>Polisnr/Kenteken</span></div>
+      <section class="main">
+        <div class="page-title">Account identificeren
+          <div class="page-nav">◀ Terug&nbsp;&nbsp;▼&nbsp;&nbsp;▶&nbsp;&nbsp;▼</div>
+          <div class="page-status">⋮&nbsp;&nbsp;✓&nbsp; (1)&nbsp; ⋮</div>
+          <div class="closed-chip">Account identificeren</div>
+        </div>
+        <div class="work">
+          <div class="subtabs"><span>Details</span><span class="active">Persoon</span><span>Polisnr/Kenteken</span></div>
+          <div class="rule"></div>
 
-        <div class="form-area">
-          <div class="left">
-            <div class="frow"><label><span style="color:#b40000">*</span> Merk:</label><div class="field select">03 Centraal Beheer - Direct</div></div>
+          <div class="form-left">
+            <div class="frow"><label><span style="color:#b40000">*</span> Merk:</label><div class="field select" style="padding:4px 28px 0 8px">03 Centraal Beheer - Direct</div></div>
             <div class="checks"><span>Zoek op oud adres <i class="checkbox"></i></span><span>Zoeken incl. gearchiveerde klanten <i class="checkbox"></i></span></div>
-            <div class="mini-line"><label>Postcode:</label><div class="field"></div><label>Huisnummer:</label><div class="field"></div><label>Toevoeging:</label><div class="field"></div></div>
+            <div class="multi"><label>Postcode:</label><div class="field"></div><label>Huisnummer:</label><div class="field"></div><label>Toevoeging:</label><div class="field"></div></div>
             <div class="frow"><label>Achternaam:</label><div class="field"></div></div>
-            <div class="mini-line"><label>Voorletters:</label><div class="field"></div><label style="grid-column:3/5">Geboortedatum:</label><div class="field" style="grid-column:5/7"></div></div>
-            <div class="mini-line"><label>Klantnummer:</label><div class="field" style="grid-column:2/4"></div><div class="field select" style="grid-column:4/7">Natuurlijk Persoon ID</div></div>
+            <div class="multi"><label>Voorletters:</label><div class="field"></div><label style="grid-column:3/5">Geboortedatum:</label><div class="field" style="grid-column:5/7"></div></div>
+            <div class="multi"><label>Klantnummer:</label><div class="field" style="grid-column:2/4"></div><div class="field select" style="grid-column:4/7;padding:4px 28px 0 8px">Natuurlijk Persoon ID</div></div>
             <div class="action-line"><button class="form-button">Account zoeken</button><button class="form-button">Ongedaan maken</button><button class="form-button">▣ MDG Privéaccount</button></div>
           </div>
 
-          <div class="right">
+          <div class="form-right">
             <div class="frow"><label>Kanaal:</label><div class="field select"></div></div>
-            <div></div>
+            <div style="height:29px"></div>
             <div class="frow"><label>E-mail:</label><div class="field"></div></div>
             <div class="frow"><label>Telefoon:</label><div class="field short"></div></div>
             <div class="frow"><label>Straat:</label><div class="field medium"></div></div>
             <div class="frow"><label>Plaats:</label><div class="field medium"></div></div>
           </div>
-        </div>
 
-        <div class="section-title">Resultaatlijst</div>
-        <div class="table-wrap">
-          <div class="filter">Filter: <input aria-label="Resultaatfilter"> ✎</div>
-          <div class="thead"><span>Bekend</span><span>Acties</span><span>Win...</span><span>Volledige naam</span><span>Geboorted...</span><span>Overlijdensd...</span><span>Straat</span><span>Huisnum...</span><span>Toevoeg...</span><span>Postcode</span><span>Plaats</span><span>Telefoon</span><span>Klantnu...</span><span>Account-ID</span><span>Archi...</span></div>
-        </div>
+          <div class="result-title">Resultaatlijst</div>
+          <div class="result"><div class="filter">Filter: <span class="filter-box"></span><span class="pencil">✎</span></div><div class="table-head result-cols"><span>Bekend</span><span>Acties</span><span>Win...</span><span>Volledige naam</span><span>Geboorted...</span><span>Overlijdensd...</span><span>Straat</span><span>Huisnum...</span><span>Toevoeg...</span><span>Postcode</span><span>Plaats</span><span>Telefoon</span><span>Klantnu...</span><span>Account-ID</span><span>Archi...</span></div></div>
 
-        <div class="partners">
-          <div class="section-title">Bevestigde partners</div>
-          <div class="table-wrap">
-            <div class="filter">Filter: <input aria-label="Partnerfilter"> ✎</div>
-            <div class="thead"><span>Acties</span><span>Klant</span><span>BP nummer</span><span>Geboortedatum</span><span>Postcode</span><span>Plaats</span><span>Straat</span></div>
-          </div>
+          <div class="partner-title">Bevestigde partners</div>
+          <div class="partner"><div class="filter">Filter: <span class="filter-box"></span><span class="pencil">✎</span></div><div class="table-head partner-cols"><span>Acties</span><span>Klant</span><span>BP nummer</span><span>Geboortedatum</span><span>Postcode</span><span>Plaats</span><span>Straat</span></div></div>
+
+          <div class="help"></div>
         </div>
-      </main>
-    </section>
+      </section>
+    </div>
+
+    <div class="statusbar"><span id="clock" class="clock"></span></div>
   </div>
-
-  <div class="statusbar"><span id="clock" class="clock"></span></div>
 </div>
-
 <script>
 (()=>{
   'use strict';
+  const fit=document.getElementById('fit');
   const screen=document.getElementById('screen');
   const toggle=document.getElementById('menuToggle');
   const clock=document.getElementById('clock');
 
+  function refit(){
+    const scale=Math.min(window.innerWidth/1905,window.innerHeight/868);
+    fit.style.transform=`scale(${scale})`;
+  }
   function updateClock(){
     const d=new Date();
     const pad=n=>String(n).padStart(2,'0');
     clock.textContent=`${d.getDate()}-${d.getMonth()+1}-${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
   }
-
   toggle.addEventListener('click',()=>{
     const open=screen.classList.contains('menu-open');
     screen.classList.toggle('menu-open',!open);
     screen.classList.toggle('menu-closed',open);
   });
-
+  window.addEventListener('resize',refit);
+  refit();
   updateClock();
   setInterval(updateClock,1000);
 })();
