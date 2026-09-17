@@ -107,7 +107,7 @@ function buildFrame(){
   overlayFrame=doc.createElement('iframe');
   overlayFrame.title='Checklist Document Picture-in-Picture';
   overlayFrame.allow='microphone';
-  overlayFrame.src=new URL('overlay-frame.html?v=2',window.location.href).href;
+  overlayFrame.src=new URL('overlay-frame.html?v=3',window.location.href).href;
   overlayFrame.addEventListener('load',()=>{
     try{
       overlayFrame.contentWindow.ChecklistOverlayBridge={action:handleAction};
@@ -130,7 +130,7 @@ async function open(){
   }
 
   try{
-    overlayWindow=await window.documentPictureInPicture.requestWindow({width:460,height:720});
+    overlayWindow=await window.documentPictureInPicture.requestWindow({width:400,height:600});
     if(button) button.textContent='Document PiP geopend';
     buildFrame();
     overlayWindow.addEventListener('pagehide',()=>{
