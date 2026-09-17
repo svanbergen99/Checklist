@@ -102,12 +102,12 @@ function handleFrameMessage(event){
 function buildFrame(){
   if(!overlayWindow||overlayWindow.closed) return;
   const doc=overlayWindow.document;
-  doc.head.innerHTML='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compliance overlay</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}iframe{width:100%;height:100%;border:0;display:block;background:transparent}</style>';
+  doc.head.innerHTML='<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Checklist · Document PiP</title><style>html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent}iframe{width:100%;height:100%;border:0;display:block;background:transparent}</style>';
   doc.body.innerHTML='';
   overlayFrame=doc.createElement('iframe');
-  overlayFrame.title='Compliance overlay';
+  overlayFrame.title='Checklist Document Picture-in-Picture';
   overlayFrame.allow='microphone';
-  overlayFrame.src=new URL('overlay-frame.html?v=1',window.location.href).href;
+  overlayFrame.src=new URL('overlay-frame.html?v=2',window.location.href).href;
   overlayFrame.addEventListener('load',()=>{
     try{
       overlayFrame.contentWindow.ChecklistOverlayBridge={action:handleAction};
@@ -121,7 +121,7 @@ function buildFrame(){
 async function open(){
   const button=document.getElementById('overlayButton');
   if(!('documentPictureInPicture' in window)){
-    alert('Deze Edge-versie ondersteunt het zwevende overlayvenster niet. Werk Edge bij en probeer het opnieuw.');
+    alert('Deze Edge-versie ondersteunt Document Picture-in-Picture niet. Werk Edge bij en probeer het opnieuw.');
     return;
   }
   if(overlayWindow&&!overlayWindow.closed){
@@ -131,19 +131,19 @@ async function open(){
 
   try{
     overlayWindow=await window.documentPictureInPicture.requestWindow({width:460,height:720});
-    if(button) button.textContent='Overlay geopend';
+    if(button) button.textContent='Document PiP geopend';
     buildFrame();
     overlayWindow.addEventListener('pagehide',()=>{
       try{overlayWindow?.removeEventListener('message',handleFrameMessage);}catch(_){ }
       overlayFrame=null;
       overlayWindow=null;
-      if(button) button.textContent='Open overlay';
+      if(button) button.textContent='Open Document PiP';
     },{once:true});
   }catch(_){
     overlayFrame=null;
     overlayWindow=null;
-    if(button) button.textContent='Open overlay';
-    alert('De overlay kon niet worden geopend. Controleer of Edge dit bestand toestemming geeft voor Picture-in-Picture.');
+    if(button) button.textContent='Open Document PiP';
+    alert('Document Picture-in-Picture kon niet worden geopend. Open hem rechtstreeks via de knop en controleer of Edge dit toestaat.');
   }
 }
 
