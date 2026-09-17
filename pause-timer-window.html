@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="nl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pauzetimer</title>
+  <style>
+    :root{--navy:#07244a;--green:#2f8f55;--red:#c83f3f;--gold:#d88b19;--cream:#fffaf0;--soft:#f0f3f6;--muted:#66758a}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;font-family:Arial,Helvetica,sans-serif;color:var(--navy);background:linear-gradient(145deg,#fffaf0,#eef7ef)}
+    body{padding:18px;overflow:auto}
+    .shell{width:100%;max-width:520px;margin:0 auto}
+    .heading{display:flex;gap:12px;align-items:center;margin-bottom:18px}
+    .icon{display:grid;place-items:center;width:48px;height:48px;border-radius:15px;background:#fff0d3;font-size:26px;flex:0 0 auto}
+    h1{margin:0;font-size:30px;line-height:1}
+    .subtitle{margin:5px 0 0;color:var(--muted);font-size:14px;line-height:1.35}
+    .panel{background:rgba(255,255,255,.88);border:1px solid rgba(255,255,255,.95);border-radius:22px;padding:18px;box-shadow:0 16px 36px rgba(7,36,74,.14)}
+    .panel[hidden]{display:none}
+    h2{margin:0 0 12px;font-size:19px}
+    .choices{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+    button{border:0;border-radius:14px;padding:12px 14px;font:inherit;font-weight:800;cursor:pointer;color:white;background:var(--navy)}
+    button:hover{filter:brightness(1.06)}
+    button:disabled{opacity:.45;cursor:default}
+    .choices button{background:#e8edf3;color:var(--navy);box-shadow:none}
+    .choices button.selected{background:var(--green);color:white}
+    .custom{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px;padding:12px;border-radius:14px;background:var(--soft);font-weight:700}
+    .custom-input{display:flex;align-items:center;gap:6px}
+    input{width:92px;padding:9px 10px;border:2px solid #ccd6e0;border-radius:10px;background:white;color:var(--navy);font:inherit;font-weight:700}
+    .row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:12px;padding:12px 14px;border-radius:14px;background:var(--soft)}
+    .row strong{font-size:18px}
+    .rate strong{color:var(--green)}
+    .budget{background:#fff0d3}
+    .budget strong{font-size:25px;font-variant-numeric:tabular-nums}
+    .primary{width:100%;margin-top:14px;background:var(--green);font-size:16px}
+    .secondary{width:100%;margin-top:10px;background:#e8edf3;color:var(--navy)}
+    .status{text-align:center;color:var(--muted);font-weight:800;margin-top:2px}
+    .remaining{text-align:center;margin-top:7px;font-size:72px;line-height:1;font-weight:900;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+    .remaining-label{text-align:center;margin-top:5px;color:var(--muted);font-size:14px;font-weight:700}
+    .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:20px}
+    .stat{padding:10px 7px;border-radius:13px;background:var(--soft);text-align:center}
+    .stat span,.stat strong{display:block}
+    .stat span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+    .stat strong{margin-top:4px;font-size:16px;font-variant-numeric:tabular-nums}
+    #startStop.running{background:var(--red)}
+    .over .remaining{color:var(--red)}
+    .note{margin:13px 3px 0;text-align:center;color:var(--muted);font-size:12px;line-height:1.4}
+    @media(max-width:360px){body{padding:12px}.panel{padding:14px}.remaining{font-size:58px}.stats{grid-template-columns:1fr}.stat{display:flex;justify-content:space-between;align-items:center}.stat strong{margin:0}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="heading">
+      <div class="icon">⏱</div>
+      <div>
+        <h1>Pauzetimer</h1>
+        <p class="subtitle">Resterende pauzetijd voor vandaag · 7,2% vast</p>
+      </div>
+    </div>
+
+    <section id="setup" class="panel">
+      <h2>Hoe lang werk je vandaag?</h2>
+      <div class="choices">
+        <button type="button" data-hours="4">4 uur</button>
+        <button type="button" data-hours="6">6 uur</button>
+        <button type="button" data-hours="7.5">7,5 uur</button>
+        <button type="button" data-hours="8">8 uur</button>
+      </div>
+      <label class="custom">
+        <span>Andere werkduur</span>
+        <span class="custom-input"><input id="customHours" type="number" min="0.5" max="24" step="0.25" inputmode="decimal" placeholder="8,5"> uur</span>
+      </label>
+      <div class="row rate"><span>Pauzepercentage</span><strong>7,2%</strong></div>
+      <div class="row budget"><span>Dagtegoed</span><strong id="budgetPreview">--:--</strong></div>
+      <button id="startDay" class="primary" type="button" disabled>Start werkdag</button>
+    </section>
+
+    <section id="cockpit" class="panel" hidden>
+      <div id="status" class="status">Klaar voor je pauze</div>
+      <div id="remaining" class="remaining">00:00</div>
+      <div class="remaining-label">pauze over vandaag</div>
+
+      <div class="stats">
+        <div class="stat"><span>Gebruikt</span><strong id="used">00:00</strong></div>
+        <div class="stat"><span>Dagtegoed</span><strong id="budget">00:00</strong></div>
+        <div class="stat"><span>Werkdag</span><strong id="workday">0 uur</strong></div>
+      </div>
+
+      <button id="startStop" class="primary" type="button">Start pauze</button>
+      <button id="newDay" class="secondary" type="button">Nieuwe werkdag</button>
+      <p class="note">Je pauze blijft doorlopen als je dit venster sluit. Open de Pauzetimer-knop opnieuw om verder te gaan.</p>
+    </section>
+  </main>
+
+  <script>
+  (()=>{
+    'use strict';
+    const RATE=.072;
+    const STORAGE_KEY='checklist-pause-timer-v1';
+    let selectedHours=null;
+    let state=null;
+
+    const $=id=>document.getElementById(id);
+
+    function todayKey(){
+      const now=new Date();
+      return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}`;
+    }
+
+    function budgetSeconds(hours){return Math.round(hours*3600*RATE)}
+
+    function formatTime(seconds){
+      const safe=Math.max(0,Math.floor(Number(seconds)||0));
+      const minutes=Math.floor(safe/60);
+      const secs=safe%60;
+      return `${String(minutes).padStart(2,'0')}:${String(secs).padStart(2,'0')}`;
+    }
+
+    function formatHours(hours){return `${String(hours).replace('.',',')} uur`}
+
+    function load(){
+      try{
+        const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if(!saved||saved.date!==todayKey()) return null;
+        if(!(Number(saved.workHours)>0)||!(Number(saved.budgetSeconds)>0)) return null;
+        return {
+          date:saved.date,
+          workHours:Number(saved.workHours),
+          budgetSeconds:Number(saved.budgetSeconds),
+          usedSeconds:Math.max(0,Number(saved.usedSeconds)||0),
+          runningSince:saved.runningSince?Number(saved.runningSince):null
+        };
+      }catch(_){return null}
+    }
+
+    function save(){if(state)localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+
+    function liveUsed(){
+      if(!state)return 0;
+      const running=state.runningSince?Math.max(0,(Date.now()-state.runningSince)/1000):0;
+      return state.usedSeconds+running;
+    }
+
+    function choose(hours,button){
+      selectedHours=hours>0?hours:null;
+      document.querySelectorAll('[data-hours]').forEach(item=>item.classList.toggle('selected',item===button));
+      $('budgetPreview').textContent=selectedHours?formatTime(budgetSeconds(selectedHours)):'--:--';
+      $('startDay').disabled=!selectedHours;
+    }
+
+    function showSetup(){
+      $('setup').hidden=false;
+      $('cockpit').hidden=true;
+      selectedHours=null;
+      $('customHours').value='';
+      choose(null,null);
+    }
+
+    function showCockpit(){
+      $('setup').hidden=true;
+      $('cockpit').hidden=false;
+      render();
+    }
+
+    function render(){
+      if(!state)return;
+      const used=liveUsed();
+      const remaining=Math.max(0,state.budgetSeconds-used);
+      const running=Boolean(state.runningSince);
+      const over=used>=state.budgetSeconds;
+      $('remaining').textContent=formatTime(remaining);
+      $('used').textContent=formatTime(used);
+      $('budget').textContent=formatTime(state.budgetSeconds);
+      $('workday').textContent=formatHours(state.workHours);
+      $('status').textContent=over?'Pauzetijd voor vandaag opgebruikt':running?'Pauze loopt':'Klaar voor je pauze';
+      $('startStop').textContent=running?'Stop pauze':'Start pauze';
+      $('startStop').classList.toggle('running',running);
+      $('cockpit').classList.toggle('over',over);
+      document.title=running?`Pauze ${formatTime(remaining)}`:'Pauzetimer';
+    }
+
+    document.querySelectorAll('[data-hours]').forEach(button=>{
+      button.addEventListener('click',()=>{
+        $('customHours').value='';
+        choose(Number(button.dataset.hours),button);
+      });
+    });
+
+    $('customHours').addEventListener('input',event=>{
+      const hours=parseFloat(String(event.target.value).replace(',','.'));
+      choose(Number.isFinite(hours)&&hours>=.5&&hours<=24?hours:null,null);
+    });
+
+    $('startDay').addEventListener('click',()=>{
+      if(!selectedHours)return;
+      state={date:todayKey(),workHours:selectedHours,budgetSeconds:budgetSeconds(selectedHours),usedSeconds:0,runningSince:null};
+      save();
+      showCockpit();
+    });
+
+    $('startStop').addEventListener('click',()=>{
+      if(!state)return;
+      if(state.runningSince){
+        state.usedSeconds=liveUsed();
+        state.runningSince=null;
+      }else{
+        state.runningSince=Date.now();
+      }
+      save();
+      render();
+    });
+
+    $('newDay').addEventListener('click',()=>{
+      state=null;
+      localStorage.removeItem(STORAGE_KEY);
+      showSetup();
+      document.title='Pauzetimer';
+    });
+
+    state=load();
+    if(state)showCockpit();else showSetup();
+    render();
+    setInterval(render,250);
+  })();
+  </script>
+</body>
+</html>
